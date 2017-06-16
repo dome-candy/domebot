@@ -31,7 +31,7 @@ isDBConnected.then( () => {
   console.log( reason );
 });
 
-// Connect the bot using application token from Discord
+// connect the bot using application token from Discord
 client.login( token );
 
 /**********************************************************************************************/
@@ -45,7 +45,7 @@ function connectToDatabase() {
     MongoClient.connect( process.env.MONGO_URI, ( err, db ) => {
       // if there was an error
       if( err ) {
-        // log reject the promise with the reason for the failure
+        // reject the promise with the reason for the failure
           return reject( err );
       }
       // otherwise, log it and resolve the promise
@@ -80,7 +80,7 @@ function handleInput() {
 }
 
 /* set up a new raid event */
-function setupRaid() {
+function setupRaid( message ) {
   // signal back that we understood
   message.channel.send( `Creating your Raid ${message.author.username}` );
 
