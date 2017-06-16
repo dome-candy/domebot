@@ -1,16 +1,27 @@
 ## Installation
 
+using HTTPS
 ```sh
-$ npm install --save domebot
+$ git clone https://github.com/autoboxer/domebot.git
+```
+
+using SSH
+```sh
+$ git clone git@github.com:autoboxer/domebot.git
 ```
 
 ## Usage
 
-```js
-const domebot = require('domebot');
-
-domebot('Rainbow');
+if you're connecting to mongo DB locally, be sure to start it using
+```sh
+$ mongod
 ```
+
+launch the program
+```sh
+$ npm start
+```
+
 ## License
 
 MIT © [Astradari / Ryan Olohan]()
