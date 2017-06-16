@@ -1,0 +1,14 @@
+# dependency directory
+node_modules
+
+# yarn lock file
+package-lock.json
+
+# .env configuration files, which are environment specific
+.env
+
+# .DS_Store files automatically created on OS X
+.DS_Store
+
+# Visual Studio generated directory
+.vscode
