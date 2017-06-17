@@ -1,29 +1,31 @@
-// Simulate config options from your production environment by
+// simulate config options from your production environment by
 // customising the .env file in your project's root folder.
 require( 'dotenv' ).load();
 
 // imports for the win
-const Discord     = require( 'discord.js' ),
-      mongoose    = require( 'mongoose' ),
-      moment      = require( 'moment' ),
-      MongoClient = require( 'mongodb' ).MongoClient;
+const Discord        = require( 'discord.js' ),
+      mongoose       = require( 'mongoose' ),
+      moment         = require( 'moment' ),
+      dbUtils        = require( './db-utilities' ),
+      raidMiddleware = require( './raid-middleware' );
 
-// import Mongoose schemas
-const raid      = require( './models/raidSchema' );
+// Use native promises for mongoose
+mongoose.Promise = global.Promise;
 
 // connect to Discord to allow writing to channels
 const client    = new Discord.Client( { sync: true } ),
       token     = process.env.CLIENT_TOKEN;
 
 // connect to the database
-var isDBConnected = connectToDatabase();
+var isDBConnected = dbUtils.connectToDatabase();
 // if the database connection is successful
 isDBConnected.then( () => {
-  // log it
-  console.log( 'connected' );
   // set up event listeners
   bindEventListeners();
-
+  // run a test
+  runTest();
+  // connect the bot using application token from Discord
+  client.login( token );
 })
 // if the database connection is unsuccessful
 .catch( reason => {
@@ -31,91 +33,49 @@ isDBConnected.then( () => {
   console.log( reason );
 });
 
-// connect the bot using application token from Discord
-client.login( token );
-
-/**********************************************************************************************/
-/* all functions below can be moved to their own files, left here for now because... laziness */
-/**********************************************************************************************/
-
-function connectToDatabase() {
-  // return a promise for chaining by the calling function
-  return new Promise( ( resolve, reject ) => {
-    // connect to the mongo database
-    MongoClient.connect( process.env.MONGO_URI, ( err, db ) => {
-      // if there was an error
-      if( err ) {
-        // reject the promise with the reason for the failure
-          return reject( err );
-      }
-      // otherwise, log it and resolve the promise
-      console.log( 'database connection open' );
-      resolve();
-
-    });
-  });
-}
-
 /* bind all event listeners */
 function bindEventListeners() {
-  // when the bot is ready
+  // when the bot is ready, log it
   client.on( 'ready', () => {
-    // log it
     console.log( 'DomeBot is ready' );
   });
   // create a listener for any messages received from Discord
   client.on( 'message', message => {
-    // handle input
-    handleInput();
+    // process the user's input
+    handleInput( message );
   });
 }
 
 /* handle any and all user input, calling the appropriate processing functions */
-function handleInput() {
-  // if the user intended to start a raid event
-    if( message.content.includes( '!createraid' ) ) {
-      // start setting up the raid
-      setupRaid( message );  
-    }
+function handleInput( message ) {
+  // extract the action from the user's message by grabbing everything up to the first space
+  const action = message.content.slice( 0, message.content.indexOf( ' ' ) ).toLowerCase();
+  // split the message (minus the action) into array elements
+  const rawDetails = message.content.replace( '!createraid', '' ).split( ',' );
+  // trim any whitespace off each of the details elements
+  const details = rawDetails.map( detail => detail.trim() );
+  // extract the channel object to allow the bot to respond to the user
+  const channel = message.channel
+  // extract the name of the user making the request
+  const username = message.author.username;
+  // call the function needed to handle the user's request
+  switch( action ) {
+    case '!createraid' : raidMiddleware.setupRaid( username, details, channel ); break;
+    default            : raidMiddleware.setupRaid( username, details, channel );
+  }
 }
+/* TODO: delete this when testing without Discord isn't needed */
+function runTest() {
 
-/* set up a new raid event */
-function setupRaid( message ) {
-  // signal back that we understood
-  message.channel.send( `Creating your Raid ${message.author.username}` );
+  const message = {
+    content: '!createraid Wrath of the Machine Challenge Mode, 3, 27/02/2018, 20:45, GMT',
+    author: {
+      username: 'John Snow'
+    },
+    channel: {
+      send: console.log
+    }
+  }
 
-  var raidInfo = message.content.replace( '!createraid ', '' ).split( ', ' );
-
-  var dateString = raidInfo[1] + ' ' + raidInfo[2],
-      dateTimeParts = dateString.split( ' ' ),
-      timeParts = dateTimeParts[1].split( ':' ),
-      dateParts = dateTimeParts[0].split( '/' ),
-      date;
-
-  date = new Date( dateParts[ 2 ], parseInt( dateParts[ 1 ], 10 ) - 1, dateParts[ 0 ], timeParts[ 0 ], timeParts[ 1 ] );
-
-  var newRaid = raid({
-    name: raidInfo[ 0 ],
-    dateAndTime: date,
-    peopleNeeded: raidInfo[ 3 ]
-  });
-
-  newRaid.save( err => {
-    if( err ) console.log( err );
-    console.log( 'Raid saved!' );
-  });
-
-  message.channel.send( `Raid created! Here are your details:
-  Name: ${ newRaid.name }
-  When: ${ moment( date ).format( 'MMMM Do YYYY, h:mm a' ) }
-  Spaces left: ${ newRaid.peopleNeeded }` );
-
-  let result = '!createraid Wrath of the Machine Challenge Mode, 27/02/2018, 20:45, 3';
-
-  result = result.replace( '!createraid ', '' );
-  result = result.split( ', ' );
-  console.log( result );
-  console.log( `Your next raid is: ${ result[ 0 ] }
-                Kicking off: ${ result[ 1 ] } : ${ result[ 2 ] }
-                Still need: ${ result[ 3 ] }` );
+  handleInput( message );
 }
