@@ -1,5 +1,5 @@
 const Discord = require( 'discord.js' );
-
+    // Must remove this comment! - Astra
     // moment           = require( 'moment' ),
     //   dbUtils          = require( './middleware/db-utilities' ),
 const raidMiddleware   = require( './raid-middleware' ),
