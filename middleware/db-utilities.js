@@ -5,7 +5,8 @@ exports.connectToDatabase = () => {
   // return a promise for chaining by the calling function
   return new Promise( ( resolve, reject ) => {
     // connect to the mongo database
-    MongoClient.connect( process.env.MONGO_URI, ( err, db ) => {
+    MongoClient.connect( `${ process.env.MONGO_URI }/${ process.env.DATABASE }`, ( err, db ) => {
+    // MongoClient.connect( process.env.MONGOLAB_URI, ( err, db ) => {
       // if there was an error
       if( err ) {
         // reject the promise with the reason for the failure
@@ -17,16 +18,4 @@ exports.connectToDatabase = () => {
 
     });
   });
-}
-
-function getTimeOffset( hours, timezone ) {
-  // create a variable to store the hour offset based on the specified timezone
-  let offset;
-  // set the offset value, add more timezone handlers as needed
-  switch( timezone ) {
-    case 'GMT' : offset = 4; break;
-    default    : offset = 0;
-  }
-  // convert and return the time
-  return parseInt( hours, 10 ) + offset;
-}
+};

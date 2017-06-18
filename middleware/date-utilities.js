@@ -15,7 +15,7 @@ exports.handleDate = ( dateString, timeString, timezone ) => {
   
   // create date object, passing date parts in the expected order
   return new Date( year, month, day, hours, minutes );
-}
+};
 
 function getTimeOffset( hours, timezone ) {
   // create a variable to store the hour offset based on the specified timezone
