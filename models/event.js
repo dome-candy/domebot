@@ -5,7 +5,8 @@ var event = new Schema({
   name: String,
   date: Date,
   openings: Number,
-  attendees: Array
+  attendees: Array,
+  creatorid: Number
   // testArea: // not sure what this is used for
   // creator: // point to person model
 });

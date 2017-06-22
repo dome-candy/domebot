@@ -12,3 +12,6 @@ package-lock.json
 
 # Visual Studio generated directory
 .vscode
+
+# .sync-config file for Atom auto-push to server
+.sync-config.cson

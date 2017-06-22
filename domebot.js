@@ -8,7 +8,7 @@ require( 'dotenv' ).load();
 const mongoose      = require( 'mongoose' ),
       dbUtils       = require( './middleware/db-utilities' ),
       botMiddleware = require( './middleware/bot-middleware' );
-      
+
 // Use native promises for mongoose
 mongoose.Promise = global.Promise;
 

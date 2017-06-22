@@ -5,16 +5,27 @@ const dateUtils = require( './date-utilities' ),
 // import Mongoose schemas
 const event = require( '../models/event' );
 
-let currentAction = {};
+let currentAction = null;
 
-exports.getAction = () => {
+let raidActions = ['start', 'name', 'date', 'time', 'openings','timezone', 'confirm'];
+
+exports.checkAction = () => {
   return currentAction;
+}
+
+exports.setAction = (actionId) => {
+  currentAction = raidActions[actionId];
 }
 /* reset the action object to allow a new interaction with the bot */
 exports.resetAction = () => {
-  currentAction = {};
+  currentAction = null;
 };
 
+exports.actionIndex = (action) => {
+  return raidActions.findIndex((x) => {return x === action});
+};
+
+/*
 exports.continueAction = ( author, details, channel ) => {
   const currentAction = getAction();
 
@@ -23,3 +34,4 @@ exports.continueAction = ( author, details, channel ) => {
     default: updateRaidDetails;
   }
 }
+*/

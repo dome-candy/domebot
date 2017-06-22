@@ -19,7 +19,7 @@ exports.bindEventListeners = () => {
   client.on( 'ready', () => {
     console.log( 'DomeBot is ready' );
     // run a test ( this will be removed when the Discord server is connected )
-    exports.runTest();
+    //exports.runTest();
   });
   // create a listener for any messages received from Discord
   client.on( 'message', message => {
@@ -30,9 +30,20 @@ exports.bindEventListeners = () => {
 
 /* handle any and all user input, calling the appropriate processing functions */
 exports.handleInput = message => {
-  let details;
+  let details, action;
+  let usableActions = ['!createraid', '!joinraid', '!leaveraid', '!findraids'];
   // extract the action from the user's message by grabbing everything up to the first space
-  action = message.content.slice( 0, message.content.indexOf( ' ' ) ).toLowerCase();
+  //action = message.content.slice( 0, message.content.indexOf( ' ' ) ).toLowerCase();
+  for (var i = 0; i < usableActions.length; i++) {
+    if (message.content.indexOf(usableActions[i]) > -1) {
+      action = usableActions[i];
+      break;
+    } else if(i === usableActions.length - 1){
+      action = message.content;
+      break;
+    }
+  };
+  console.log(action);
   // if the action starts with a !, it is meant to be a new action
   if( action.startsWith( '!' ) ) {
     // split the message (minus the action) into array elements
@@ -49,16 +60,16 @@ exports.handleInput = message => {
   const author = message.author;
   // call the function needed to handle the user's request
   switch( action ) {
-    case '!createraid' : raidMiddleware.setupRaid( author, details, channel ); break;
+    case '!createraid' : raidMiddleware.setupRaid( message, author, channel ); break;
     case '!joinraid'   : raidMiddleware.joinRaid( author, details, channel ); break;
     case '!leaveraid'  : raidMiddleware.leaveRaid( author, details, channel ); break;
     case '!findraids'  : raidMiddleware.findRaids( details, channel ); break;
-    default            : actionMiddleware.continueAction( author, details, channel );
+    default            : raidMiddleware.existingProcess( message, author, channel );
   }
 };
 
 /* TODO: delete this when testing without Discord isn't needed */
-exports.runTest = () => {
+/*exports.runTest = () => {
 console.log( 'running test' );
   const message = {
     content: '!createraid Wrath of the Machine Challenge Mode, 3, 27/02/2018, 20:45, GMT',
@@ -72,3 +83,4 @@ console.log( 'running test' );
 
   exports.handleInput( message );
 };
+*/
