@@ -1,7 +1,7 @@
 const mongoose = require( 'mongoose' );
 const Schema = mongoose.Schema;
 
-var event = new Schema({
+var raidEvent = new Schema({
   name: String,
   date: Date,
   openings: Number,
@@ -11,7 +11,7 @@ var event = new Schema({
   // creator: // point to person model
 });
 
-var event = mongoose.model( 'event', event );
+var event = mongoose.model( 'raidEvent', raidEvent );
 
 module.exports = event;
 

@@ -25,6 +25,14 @@ exports.actionIndex = (action) => {
   return raidActions.findIndex((x) => {return x === action});
 };
 
+exports.nextStep = () => {
+  setAction(actionIndex(checkAction()) + 1);
+};
+
+exports.nextStep = () => {
+  setAction(actionIndex(checkAction()) - 1);
+};
+
 /*
 exports.continueAction = ( author, details, channel ) => {
   const currentAction = getAction();

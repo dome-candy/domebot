@@ -31,7 +31,7 @@ exports.setupRaid = ( message, author, channel ) => {
       case 'date': createRaid.date(message, author, channel); break;
       case 'time': createRaid.time(message, author, channel); break;
       case 'openings': createRaid.openings(message, author, channel); break;
-      case 'confirm': createRaid.confirm(author, channel); break;
+      case 'timezone': createRaid.timezone(message, author, channel); break;
 
       default:
 
@@ -40,6 +40,19 @@ exports.setupRaid = ( message, author, channel ) => {
 };
 
 exports.existingProcess = (message, author, channel) => {
+  let content = message.content;
+  switch (content) {
+    case 'back': createRaid.back(message, author, channel); break;
+    case 'exit': createRaid.exit(message, author, channel); break;
+    case 'confirm': createRaid.confirmRaid(message, author, channel); break;
+
+    default: passInfo(message, author, channel);
+
+  }
+
+};
+
+let passInfo = (message, author, channel) => {
   if(actionMiddleware.checkAction() !== null){
     exports.setupRaid(message, author, channel);
   }

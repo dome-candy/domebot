@@ -7,7 +7,9 @@ require( 'dotenv' ).load();
 // imports for the win
 const mongoose      = require( 'mongoose' ),
       dbUtils       = require( './middleware/db-utilities' ),
-      botMiddleware = require( './middleware/bot-middleware' );
+      botMiddleware = require( './middleware/bot-middleware' ),
+      autoincrement = require('simple-mongoose-autoincrement');
+      mongoose.plugin(autoincrement, {});
 
 // Use native promises for mongoose
 mongoose.Promise = global.Promise;

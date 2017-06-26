@@ -12,7 +12,7 @@ exports.handleDate = ( dateString, timeString, timezone ) => {
     case 'EST' : [ month, day, year ] = dateString.split( '/' ); break;
     default    : [ year, month, day ] = dateString.split( '/' );
   }
-  
+
   // create date object, passing date parts in the expected order
   return new Date( year, month, day, hours, minutes );
 };
@@ -27,4 +27,15 @@ function getTimeOffset( hours, timezone ) {
   }
   // convert and return the time
   return parseInt( hours, 10 ) + offset;
+}
+
+exports.dateOnly = (dateString) => {
+  let day, month, year;
+  [day, month, year] = dateString.split('/');
+  return new Date(year, month - 1, day);
+};
+
+exports.timeOnly = (timeString) => {
+  let [hours, minutes] = timeString.split(':');
+  return new Date( "", "", "", hours, minutes);
 }

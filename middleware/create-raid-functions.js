@@ -1,10 +1,11 @@
 // Dependencies!
 const action = require('./action-middleware'),
       dateUtils = require( './date-utilities' ),
-      moment = require('moment');
+      moment = require('moment'),
+      botTalk = require('./bot-messages');
 
 // import Mongoose schemas
-const event = require( '../models/event' );
+const raidEvent = require( '../models/event' );
 
 // Define raids array for storing new raid objects
 let raids = [];
@@ -25,8 +26,8 @@ function Raid(creatorid, creatorChannel, name, date, time, openings, timezone){
 let checkAuthor = (author, channel) => {
   return new Promise((resolve, reject) => {
     let raidId = findRaid(author);
-    if(raids[raidId].creatorid === author.id && raids[raidId].creatorChannel === channel.id){
-      resolve();
+    if(raids[raidId] && raids[raidId].creatorid === author.id && raids[raidId].creatorChannel === channel.id){
+      resolve(raidId);
     } else {
       let message = `The author '${author.username}' or the channel '${channel.name}' are incorrect for the current raid session.`;
       reject(message);
@@ -65,13 +66,11 @@ let raidInProgress = (author, channel) =>{
 exports.name = (message, author, channel) => {
   // Check if we got Here
   console.log(`We got here!`);
-  // This will return the index of the raid we're creating, or create a new instance, push to the array, and return that index
-  let raidIndex = raidInProgress(author, channel);
-  console.log(raidIndex);
   // Run our check for correct author AND channel, resolve triggers action on the object, reject logs to console
-  checkAuthor(author, channel).then(() => {
-    raids[raidIndex].name = message.content;
-    console.log(raids[raidIndex]);
+  checkAuthor(author, channel).then((raidId) => {
+    raids[raidId].name = message.content;
+    console.log(raids[raidId]);
+    botTalk.dateRaid(message, author, channel, raids[raidId]);
     nextStep();
     return;
   }).catch((err) => {
@@ -83,15 +82,15 @@ exports.start = (message, author, channel) => {
   let raidIndex = raidInProgress(author, channel);
   console.log(raidIndex);
   console.log(`Let's start making a raid!`);
+  botTalk.startRaid(message, author, channel);
   nextStep();
 };
 
 exports.date = (message, author, channel) => {
-  let raidIndex = raidInProgress(author, channel);
-  console.log(raidIndex);
-  checkAuthor(author, channel).then(() => {
-    raids[raidIndex].date = message.content;
-    console.log(raids[raidIndex]);
+  checkAuthor(author, channel).then((raidId) => {
+    raids[raidId].date = message.content;
+    console.log(raids[raidId]);
+    botTalk.timeRaid(message, author, channel, raids[raidId]);
     nextStep();
     return;
   }).catch((err) => {
@@ -100,11 +99,10 @@ exports.date = (message, author, channel) => {
 }
 
 exports.time = (message, author, channel) => {
-  let raidIndex = raidInProgress(author, channel);
-  console.log(raidIndex);
-  checkAuthor(author, channel).then(() => {
-    raids[raidIndex].time = message.content;
-    console.log(raids[raidIndex]);
+  checkAuthor(author, channel).then((raidId) => {
+    raids[raidId].time = message.content;
+    console.log(raids[raidId]);
+    botTalk.openingsRaid(message, author, channel, raids[raidId]);
     nextStep();
     return;
   }).catch((err) => {
@@ -113,11 +111,10 @@ exports.time = (message, author, channel) => {
 }
 
 exports.openings = (message, author, channel) => {
-  let raidIndex = raidInProgress(author, channel);
-  console.log(raidIndex);
-  checkAuthor(author, channel).then(() => {
-    raids[raidIndex].openings = message.content;
-    console.log(raids[raidIndex]);
+  checkAuthor(author, channel).then((raidId) => {
+    raids[raidId].openings = message.content;
+    console.log(raids[raidId]);
+    botTalk.timezoneRaid(message, author, channel, raids[raidId]);
     nextStep();
     return;
   }).catch((err) => {
@@ -126,11 +123,11 @@ exports.openings = (message, author, channel) => {
 }
 
 exports.timezone = (message, author, channel) => {
-  let raidIndex = raidInProgress(author, channel);
-  console.log(raidIndex);
-  checkAuthor(author, channel).then(() => {
-    raids[raidIndex].timezone = message.content;
-    console.log(raids[raidIndex]);
+  checkAuthor(author, channel).then((raidId) => {
+    raids[raidId].timezone = message.content;
+    console.log('the full raid should now be visible here.');
+    console.log(raids[raidId]);
+    botTalk.confirmRaid(message, author, channel, raids[raidId]);
     nextStep();
     return;
   }).catch((err) => {
@@ -138,23 +135,38 @@ exports.timezone = (message, author, channel) => {
   });
 }
 
-exports.confirm = (author, channel) => {
-  let raidIndex = raidInProgress(author, channel);
-  console.log(raidIndex);
-  checkAuthor(author, channel).then(() => {
+exports.confirmRaid = (message, author, channel) => {
+  console.log('Attempting Assimilation to Database, please hold...');
+  var raidToDB;
+  checkAuthor(author, channel).then((raidId) => {
+    console.log('We have identified the raid in question...');
     //Sort out date
-    let date = dateUtils.handleDate(raids[raidIndex].date, raids[raidIndex].time, raids[raidIndex].timezone);
+    let date = dateUtils.handleDate(raids[raidId].date, raids[raidId].time, raids[raidId].timezone);
+    console.log(`We have defined the date... ${date}`);
     // Set up event model for saving
-    let newRaid = new event({
-      name: raids[raidIndex].name,
+    raidToDB = new raidEvent({
+      name: raids[raidId].name,
       date: date,
-      openings: raids[raidIndex].openings,
-      creatorid: raids[raidIndex].creatorid
-    }).then(() => {
-      console.log(`New raid event has been created. Well done. Parameters: ${newRaid.name}, ${moment(newRaid.date).format('dddd, MMMM Do YYYY, h:mm a')}, ${newRaid.openings}, ${newRaid.creatorid}.`);
-      action.resetAction();
+      openings: raids[raidId].openings,
+      creatorid: raids[raidId].creatorid
     });
+    console.log(raidToDB);
+    raidToDB.save(function(err, raidSaved){
+      if(err)console.log(err);
+      console.log(raidSaved);
+      console.log(`New raid event has been created. Well done. Parameters: ${raidSaved.name}, ${moment(raidSaved.date).format('dddd, MMMM Do YYYY, h:mm a')}, ${raidSaved.openings}, ${raidSaved.creatorid}.`);
+      botTalk.confirmRaidResult(message, author, channel, raid);
+      action.resetAction();
+    });//.catch( reason => {
+      //console.log(reason);
+    //});
   }).catch((err) => {
     console.log(err);
   });
 }
+
+let dbTest = () => {
+  return raidEvent.find()
+};
+
+console.log(dbTest());
